@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lift Log — Desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f; --surface: #161618; --card: #1c1c1f; --border: #2a2a2e;
+    --accent: #c8f135; --accent2: #4EB8FF; --danger: #FF5A5A; --green: #4ADE80;
+    --text: #f0f0f0; --muted: #6b6b72;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; min-height: 100vh; }
+  .shell { display: flex; min-height: 100vh; }
+
+  nav { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; }
+  .nav-brand { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); }
+  .nav-brand h1 { font-family: var(--font-display); font-size: 32px; letter-spacing: 2px; color: var(--accent); line-height: 1; }
+  .nav-brand p { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+  .nav-links { padding: 16px 12px; flex: 1; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; }
+  .nav-link:hover { color: var(--text); background: var(--card); }
+  .nav-link.active { color: var(--accent); background: #c8f13515; }
+  .nav-link .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-targets { padding: 16px; border-top: 1px solid var(--border); font-size: 11px; font-family: var(--font-mono); color: var(--muted); line-height: 1.8; }
+  .nav-targets strong { color: var(--accent); display: block; margin-bottom: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  main { margin-left: 220px; flex: 1; padding: 36px 40px; max-width: 960px; }
+  .page-header { margin-bottom: 32px; }
+  .page-header h2 { font-family: var(--font-display); font-size: 42px; letter-spacing: 1px; line-height: 1; color: var(--text); }
+  .page-header p { color: var(--muted); margin-top: 6px; font-size: 13px; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-val { font-family: var(--font-display); font-size: 40px; letter-spacing: 1px; line-height: 1; color: var(--accent); }
+  .stat-unit { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .progress-wrap { margin-top: 10px; }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .progress-fill.blue { background: var(--accent2); }
+  .progress-fill.over { background: var(--danger); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+  input, select, textarea { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: var(--font-body); font-size: 13px; transition: border-color 0.15s; width: 100%; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 70px; }
+  select option { background: var(--card); }
+
+  .btn { padding: 10px 20px; border-radius: 8px; font-family: var(--font-body); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: all 0.15s; }
+  .btn:hover { background: var(--card); }
+  .btn-accent { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .btn-accent:hover { opacity: 0.88; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-danger { color: var(--danger); border-color: #f8717133; }
+  .btn-danger:hover { background: #ff5a5a15; }
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; align-items: center; flex-wrap: wrap; }
+
+  .entries { display: flex; flex-direction: column; gap: 8px; }
+  .entry { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px; transition: border-color 0.15s; }
+  .entry:hover { border-color: #3a3a40; }
+  .entry-left { flex: 1; min-width: 0; }
+  .entry-date { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 4px; }
+  .entry-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .entry-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .entry-macros { display: flex; gap: 14px; margin-top: 6px; flex-wrap: wrap; }
+  .macro { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .macro span { color: var(--accent); font-weight: 500; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; margin-left: 8px; }
+  .badge-green { background: #c8f13520; color: var(--accent); border: 1px solid #c8f13540; }
+  .badge-blue { background: #4eb8ff20; color: var(--accent2); border: 1px solid #4eb8ff40; }
+
+  .exercise-block { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; background: var(--surface); }
+  .exercise-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .exercise-header input { flex: 1; }
+  .sets-table { width: 100%; border-collapse: collapse; }
+  .sets-table th { font-size: 10px; color: var(--muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 6px; text-align: left; }
+  .sets-table td { padding: 4px 6px; }
+  .sets-table td input { padding: 6px 8px; font-size: 12px; }
+  .set-num { color: var(--muted); font-family: var(--font-mono); font-size: 12px; text-align: center; }
+
+  .toast { position: fixed; bottom: 28px; right: 28px; background: var(--accent); color: #000; font-weight: 600; font-size: 13px; padding: 12px 20px; border-radius: 10px; transform: translateY(80px); opacity: 0; transition: all 0.25s cubic-bezier(.4,0,.2,1); z-index: 999; font-family: var(--font-mono); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: var(--danger); color: #fff; }
+
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+  .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.4; }
+  .section-sep { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+  .loading { text-align: center; padding: 30px; color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* Food search */
+  .search-wrap { position: relative; }
+  .search-results { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; max-height: 320px; overflow-y: auto; }
+  .search-result { padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .search-result:last-child { border-bottom: none; }
+  .search-result:hover { background: var(--card); }
+  .search-result-info { flex: 1; min-width: 0; }
+  .search-result-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .search-result-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
+  .source-pill { font-size: 9px; padding: 2px 8px; border-radius: 8px; background: var(--card); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono); font-weight: 600; }
+  .source-pill.local { background: #c8f13520; color: var(--accent); }
+
+  .item-row { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 14px; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .item-macros { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
+  .item-grams { width: 80px; padding: 7px 10px; font-size: 13px; text-align: center; }
+  .item-remove { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; }
+  .item-remove:hover { color: var(--danger); }
+
+  .macros-summary { background: linear-gradient(135deg, #c8f13518, #c8f13508); border: 1px solid #c8f13540; border-radius: 10px; padding: 14px 18px; margin-top: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .macro-stat { text-align: center; }
+  .macro-val { font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--accent); }
+  .macro-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; font-family: var(--font-mono); }
+
+  .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .template-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.15s; }
+  .template-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .template-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .template-meta { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+  .template-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav>
+    <div class="nav-brand">
+      <h1>LIFT LOG</h1>
+      <p>83 kg · cut phase</p>
+    </div>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="showPage('dashboard', this)"><span class="icon">◈</span> Dashboard</button>
+      <button class="nav-link" onclick="showPage('diet', this)"><span class="icon">◉</span> Diet</button>
+      <button class="nav-link" onclick="showPage('foods', this)"><span class="icon">🍽</span> Foods</button>
+      <button class="nav-link" onclick="showPage('templates', this)"><span class="icon">📋</span> Templates</button>
+      <button class="nav-link" onclick="showPage('weight', this)"><span class="icon">◎</span> Weight</button>
+      <button class="nav-link" onclick="showPage('workout', this)"><span class="icon">◆</span> Workout</button>
+    </div>
+    <div class="nav-targets">
+      <strong>Cut targets</strong>
+      2,258 kcal<br>183g protein<br>146g carbs<br>75g fat
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="page-header"><h2>DASHBOARD</h2><p id="dash-date"></p></div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Calories today</div>
+          <div class="stat-val" id="stat-kcal">—</div>
+          <div class="stat-unit">/ 2,258 kcal</div>
+          <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="prog-kcal" style="width:0%"></div></div></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Protein today</div>
+          <div class="stat-val" id="stat-prot">—</div>
+          <div class="stat-unit">/ 183g target</div>
+          <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill blue" id="prog-prot" style="width:0%"></div></div></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Current weight</div>
+          <div class="stat-val" id="stat-weight">—</div>
+          <div class="stat-unit" id="stat-weight-sub">kg</div>
+        </div>
+      </div>
+      <div class="dash-grid">
+        <div>
+          <div class="card-title">Today's meals</div>
+          <div class="entries" id="dash-meals"><div class="loading">Loading...</div></div>
+        </div>
+        <div>
+          <div class="card-title">Recent workouts</div>
+          <div class="entries" id="dash-workouts"><div class="loading">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIET -->
+    <div id="page-diet" style="display:none">
+      <div class="page-header"><h2>DIET LOG</h2><p>Build meals from your food library — macros calculated automatically</p></div>
+
+      <div class="card">
+        <div class="card-title">Quick reuse — templates</div>
+        <div id="template-quick"><div class="loading">Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Log a meal</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Date</label><input type="date" id="d-date"></div>
+          <div class="form-group">
+            <label>Meal type</label>
+            <select id="d-type">
+              <option>Breakfast</option><option>Mid-morning snack</option><option>Lunch</option>
+              <option>Pre-workout</option><option>Dinner</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group full"><label>Description (optional)</label><input type="text" id="d-desc" placeholder="e.g. Post-gym lunch"></div>
+        </div>
+
+        <hr class="section-sep" style="margin:20px 0">
+        <div class="card-title">Add foods</div>
+        <div class="search-wrap">
+          <input type="text" id="food-search" placeholder="Search your food library..." oninput="searchFoods()">
+          <div class="search-results" id="search-results" style="display:none"></div>
+        </div>
+
+        <div id="selected-items" style="margin-top:12px"></div>
+
+        <div class="macros-summary" id="macros-summary" style="display:none">
+          <div class="macro-stat"><div class="macro-val" id="m-tot-kcal">0</div><div class="macro-label">kcal</div></div>
+          <div class="macro-stat"><div class="macro-val" id="m-tot-prot">0</div><div class="macro-label">protein</div></div>
+          <div class="macro-stat"><div class="macro-val" id="m-tot-carbs">0</div><div class="macro-label">carbs</div></div>
+          <div class="macro-stat"><div class="macro-val" id="m-tot-fat">0</div><div class="macro-label">fat</div></div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-accent" onclick="saveMeal()">Save meal</button>
+          <button class="btn" onclick="saveAsTemplate()">Save as template</button>
+        </div>
+      </div>
+
+      <hr class="section-sep">
+      <div class="card-title">Meal history</div>
+      <div class="entries" id="meal-list"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- FOODS -->
+    <div id="page-foods" style="display:none">
+      <div class="page-header"><h2>FOOD LIBRARY</h2><p>Build up your library — search Open Food Facts or add custom foods</p></div>
+
+      <div class="card">
+        <div class="card-title">Search Open Food Facts</div>
+        <input type="text" id="off-search" placeholder="e.g. chicken breast, tuna, oats..." oninput="searchOFF()">
+        <div class="search-results" id="off-results" style="display:none;margin-top:10px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Add custom food</div>
+        <div class="form-grid">
+          <div class="form-group full"><label>Name</label><input type="text" id="cf-name" placeholder="e.g. Mum's lasagne"></div>
+        </div>
+        <div class="form-grid four" style="margin-top:10px">
+          <div class="form-group"><label>kcal / 100g</label><input type="number" id="cf-kcal"></div>
+          <div class="form-group"><label>Protein / 100g</label><input type="number" id="cf-prot" step="0.1"></div>
+          <div class="form-group"><label>Carbs / 100g</label><input type="number" id="cf-carbs" step="0.1"></div>
+          <div class="form-group"><label>Fat / 100g</label><input type="number" id="cf-fat" step="0.1"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-accent" onclick="addCustomFood()">Add to library</button></div>
+      </div>
+
+      <hr class="section-sep">
+      <div class="card-title">Your library</div>
+      <div class="entries" id="foods-list"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div id="page-templates" style="display:none">
+      <div class="page-header"><h2>MEAL TEMPLATES</h2><p>Saved meals you can apply to any date in one click</p></div>
+      <div id="templates-grid"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- WEIGHT -->
+    <div id="page-weight" style="display:none">
+      <div class="page-header"><h2>WEIGHT LOG</h2><p>Daily weigh-ins — track 7-day rolling average</p></div>
+      <div class="card">
+        <div class="card-title">Log weight</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Date</label><input type="date" id="w-date"></div>
+          <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="w-kg" placeholder="83.0"></div>
+          <div class="form-group"><label>Waist (cm) — optional</label><input type="number" step="0.1" id="w-waist" placeholder="85.0"></div>
+          <div class="form-group"><label>Notes</label><input type="text" id="w-notes" placeholder="Morning fasted"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-accent" onclick="saveWeight()">Save entry</button></div>
+      </div>
+      <hr class="section-sep">
+      <div class="card-title">Weight history</div>
+      <div class="entries" id="weight-list"><div class="loading">Loading...</div></div>
+    </div>
+
+    <!-- WORKOUT -->
+    <div id="page-workout" style="display:none">
+      <div class="page-header"><h2>WORKOUT LOG</h2><p>Log sessions, sets and reps</p></div>
+      <div class="card">
+        <div class="card-title">Log a workout</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Date</label><input type="date" id="wo-date"></div>
+          <div class="form-group">
+            <label>Session type</label>
+            <select id="wo-type">
+              <option>Upper (Push)</option><option>Upper (Pull)</option><option>Upper (Full)</option><option>Lower</option><option>Full</option><option>Cardio</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Duration (min)</label><input type="number" id="wo-dur" placeholder="60"></div>
+          <div class="form-group"><label>RPE (1–10)</label><input type="number" min="1" max="10" id="wo-rpe" placeholder="7"></div>
+          <div class="form-group full"><label>Notes</label><textarea id="wo-notes" placeholder="PR, how you felt..."></textarea></div>
+        </div>
+
+        <p class="card-title" style="margin:20px 0 10px">Exercises</p>
+        <div id="exercises-container"></div>
+        <button class="btn btn-sm" onclick="addExercise()" style="margin-bottom:12px">+ Add exercise</button>
+
+        <div class="form-actions"><button class="btn btn-accent" onclick="saveWorkout()">Save workout</button></div>
+      </div>
+      <hr class="section-sep">
+      <div class="card-title">Workout history</div>
+      <div class="entries" id="workout-list"><div class="loading">Loading...</div></div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8000';
+const today = new Date().toISOString().split('T')[0];
+let exerciseCount = 0;
+let selectedItems = [];
+let searchTimer = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['d-date','w-date','wo-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  loadDashboard();
+});
+
+function showPage(name, btnEl) {
+  ['dashboard','diet','foods','templates','weight','workout'].forEach(p => {
+    document.getElementById('page-' + p).style.display = p === name ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+
+  if (name === 'diet')      { loadMeals(); loadTemplatesQuick(); }
+  if (name === 'weight')    loadWeights();
+  if (name === 'workout')   loadWorkouts();
+  if (name === 'foods')     loadFoods();
+  if (name === 'templates') loadTemplates();
+  if (name === 'dashboard') loadDashboard();
+}
+
+function toast(msg, error = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if (!r.ok) throw new Error(await r.text());
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+// ── Dashboard ──
+async function loadDashboard() {
+  try {
+    const [meals, weights, workouts] = await Promise.all([
+      api('GET', `/meals?limit=100`),
+      api('GET', `/weight?limit=7`),
+      api('GET', `/workouts?limit=5`),
+    ]);
+    const todayMeals = meals.filter(m => m.log_date === today);
+    const kcal = todayMeals.reduce((s, m) => s + (m.calories || 0), 0);
+    const prot = todayMeals.reduce((s, m) => s + (Number(m.protein_g) || 0), 0);
+
+    document.getElementById('stat-kcal').textContent = kcal;
+    document.getElementById('stat-prot').textContent = Math.round(prot) + 'g';
+    document.getElementById('prog-kcal').style.width = Math.min(100, Math.round(kcal / 22.58)) + '%';
+    document.getElementById('prog-kcal').className = 'progress-fill' + (kcal > 2258 ? ' over' : '');
+    document.getElementById('prog-prot').style.width = Math.min(100, Math.round(prot / 1.83)) + '%';
+
+    if (weights.length) {
+      const latest = weights[0];
+      document.getElementById('stat-weight').textContent = latest.weight_kg;
+      document.getElementById('stat-weight-sub').textContent =
+        latest.rolling_7d_avg ? `kg · 7d avg ${latest.rolling_7d_avg}` : 'kg';
+    }
+
+    const dmEl = document.getElementById('dash-meals');
+    dmEl.innerHTML = todayMeals.length
+      ? todayMeals.map(m => `
+          <div class="entry">
+            <div class="entry-left">
+              <div class="entry-title">${m.description || m.meal_type || 'Meal'}</div>
+              <div class="entry-sub">${m.calories || 0} kcal · ${m.protein_g || 0}g protein</div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty"><div class="empty-icon">🥗</div>No meals today</div>';
+
+    const dwEl = document.getElementById('dash-workouts');
+    dwEl.innerHTML = workouts.length
+      ? workouts.slice(0, 4).map(w => `
+          <div class="entry">
+            <div class="entry-left">
+              <div class="entry-date">${w.log_date}</div>
+              <div class="entry-title">${w.session_type || 'Workout'}</div>
+              <div class="entry-sub">${w.duration_min ? w.duration_min + ' min' : ''} ${w.rpe ? '· RPE ' + w.rpe : ''}</div>
+            </div>
+          </div>`).join('')
+      : '<div class="empty"><div class="empty-icon">🏋️</div>No workouts yet</div>';
+  } catch(e) { toast('Could not reach API — is it running?', true); }
+}
+
+// ── Diet ──
+function searchFoods() {
+  clearTimeout(searchTimer);
+  const q = document.getElementById('food-search').value.trim();
+  const resultsEl = document.getElementById('search-results');
+  if (q.length < 1) { resultsEl.style.display = 'none'; return; }
+  searchTimer = setTimeout(async () => {
+    try {
+      const results = await api('GET', `/foods/search?q=${encodeURIComponent(q)}`);
+      if (!results.length) {
+        resultsEl.innerHTML = `<div class="search-result"><div class="search-result-info"><div class="search-result-name" style="color:var(--muted)">No matches in your library</div><div class="search-result-sub">Add foods from the Foods tab first</div></div></div>`;
+      } else {
+        resultsEl.innerHTML = results.map(f => `
+          <div class="search-result" onclick='selectFood(${JSON.stringify(f).replace(/'/g, "&apos;")})'>
+            <div class="search-result-info">
+              <div class="search-result-name">${f.name}${f.brand ? ' · ' + f.brand : ''}</div>
+              <div class="search-result-sub">${f.kcal_per_100g || '—'} kcal · ${f.protein_per_100g || 0}g P / 100g</div>
+            </div>
+            <span class="source-pill local">+ ADD</span>
+          </div>`).join('');
+      }
+      resultsEl.style.display = 'block';
+    } catch(e) { toast('Search failed', true); }
+  }, 200);
+}
+
+function selectFood(food) {
+  selectedItems.push({ food, grams: 100 });
+  document.getElementById('food-search').value = '';
+  document.getElementById('search-results').style.display = 'none';
+  renderItems();
+}
+
+function removeItem(idx) { selectedItems.splice(idx, 1); renderItems(); }
+function updateGrams(idx, val) { selectedItems[idx].grams = parseFloat(val) || 0; renderMacroTotals(); }
+
+function renderItems() {
+  const el = document.getElementById('selected-items');
+  if (!selectedItems.length) {
+    el.innerHTML = '';
+    document.getElementById('macros-summary').style.display = 'none';
+    return;
+  }
+  el.innerHTML = selectedItems.map((item, idx) => `
+    <div class="item-row">
+      <div class="item-info">
+        <div class="item-name">${item.food.name}${item.food.brand ? ' · ' + item.food.brand : ''}</div>
+        <div class="item-macros">${item.food.kcal_per_100g || '—'} kcal · ${item.food.protein_per_100g || 0}g P / 100g</div>
+      </div>
+      <input type="number" class="item-grams" value="${item.grams}" min="0" onchange="updateGrams(${idx}, this.value)">
+      <span style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">g</span>
+      <button class="item-remove" onclick="removeItem(${idx})">✕</button>
+    </div>`).join('');
+  renderMacroTotals();
+}
+
+function renderMacroTotals() {
+  let kcal = 0, prot = 0, carbs = 0, fat = 0;
+  selectedItems.forEach(({ food, grams }) => {
+    const r = grams / 100;
+    kcal += (food.kcal_per_100g || 0) * r;
+    prot += (food.protein_per_100g || 0) * r;
+    carbs += (food.carbs_per_100g || 0) * r;
+    fat += (food.fat_per_100g || 0) * r;
+  });
+  document.getElementById('m-tot-kcal').textContent = Math.round(kcal);
+  document.getElementById('m-tot-prot').textContent = prot.toFixed(1);
+  document.getElementById('m-tot-carbs').textContent = carbs.toFixed(1);
+  document.getElementById('m-tot-fat').textContent = fat.toFixed(1);
+  document.getElementById('macros-summary').style.display = 'grid';
+}
+
+async function saveMeal() {
+  if (!selectedItems.length) { toast('Add at least one food', true); return; }
+  try {
+    await api('POST', '/meals', {
+      log_date: document.getElementById('d-date').value,
+      meal_type: document.getElementById('d-type').value,
+      description: document.getElementById('d-desc').value || null,
+      items: selectedItems.map(i => ({ food_id: i.food.id, grams: i.grams })),
+    });
+    toast('Meal saved ✓');
+    selectedItems = [];
+    document.getElementById('d-desc').value = '';
+    renderItems();
+    loadMeals();
+  } catch(e) { toast('Error saving meal', true); }
+}
+
+async function saveAsTemplate() {
+  if (!selectedItems.length) { toast('Add foods first', true); return; }
+  const name = prompt('Template name?', document.getElementById('d-desc').value || 'My meal');
+  if (!name) return;
+  try {
+    await api('POST', '/templates', {
+      name,
+      meal_type: document.getElementById('d-type').value,
+      description: document.getElementById('d-desc').value || null,
+      items: selectedItems.map(i => ({ food_id: i.food.id, grams: i.grams })),
+    });
+    toast('Template saved ✓');
+    loadTemplatesQuick();
+  } catch(e) { toast('Error saving template', true); }
+}
+
+async function loadMeals() {
+  const el = document.getElementById('meal-list');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const meals = await api('GET', '/meals?limit=50');
+    el.innerHTML = meals.length
+      ? meals.map(m => `
+          <div class="entry">
+            <div class="entry-left">
+              <div class="entry-date">${m.log_date} · <span class="badge badge-blue">${m.meal_type || 'Meal'}</span></div>
+              <div class="entry-title">${m.description || '—'}</div>
+              <div class="entry-macros">
+                ${m.calories ? `<div class="macro"><span>${m.calories}</span> kcal</div>` : ''}
+                ${m.protein_g ? `<div class="macro"><span>${m.protein_g}g</span> protein</div>` : ''}
+                ${m.carbs_g ? `<div class="macro"><span>${m.carbs_g}g</span> carbs</div>` : ''}
+                ${m.fat_g ? `<div class="macro"><span>${m.fat_g}g</span> fat</div>` : ''}
+              </div>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteMeal(${m.id})">Delete</button>
+          </div>`).join('')
+      : '<div class="empty"><div class="empty-icon">🥗</div>No meals yet</div>';
+  } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
+}
+
+async function deleteMeal(id) {
+  if (!confirm('Delete this meal?')) return;
+  try { await api('DELETE', `/meals/${id}`); toast('Deleted'); loadMeals(); }
+  catch(e) { toast('Error deleting', true); }
+}
+
+// ── Templates ──
+async function loadTemplatesQuick() {
+  const el = document.getElementById('template-quick');
+  try {
+    const tpls = await api('GET', '/templates');
+    if (!tpls.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:12px">No templates yet — save a meal as a template to reuse it.</div>';
+      return;
+    }
+    el.innerHTML = `<div class="template-grid">${tpls.slice(0, 6).map(t => `
+      <div class="template-card" onclick="useTemplate(${t.id})">
+        <div class="template-name">${t.name}</div>
+        <div class="template-meta">${t.items.length} items · ${t.meal_type || 'any'}</div>
+      </div>`).join('')}</div>`;
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load templates</div>'; }
+}
+
+async function loadTemplates() {
+  const el = document.getElementById('templates-grid');
+  try {
+    const tpls = await api('GET', '/templates');
+    if (!tpls.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>No templates yet — save a meal as a template from the Diet tab</div>';
+      return;
+    }
+    el.innerHTML = `<div class="template-grid">${tpls.map(t => `
+      <div class="template-card">
+        <div class="template-name">${t.name}</div>
+        <div class="template-meta">${t.items.length} items · ${t.meal_type || 'any'}</div>
+        <div class="template-actions">
+          <button class="btn btn-sm btn-accent" onclick="useTemplate(${t.id})">Apply today</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTemplate(${t.id})">✕</button>
+        </div>
+      </div>`).join('')}</div>`;
+  } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
+}
+
+async function useTemplate(id) {
+  try {
+    await api('POST', `/templates/${id}/use`, { log_date: document.getElementById('d-date')?.value || today });
+    toast('Meal logged from template ✓');
+    loadMeals();
+  } catch(e) { toast('Error using template', true); }
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  try { await api('DELETE', `/templates/${id}`); toast('Deleted'); loadTemplates(); }
+  catch(e) { toast('Error deleting', true); }
+}
+
+// ── Foods ──
+async function loadFoods() {
+  const el = document.getElementById('foods-list');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const foods = await api('GET', '/foods');
+    if (!foods.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🍽</div>No foods yet — search Open Food Facts above or add a custom food</div>';
+      return;
+    }
+    el.innerHTML = foods.map(f => `
+      <div class="entry">
+        <div class="entry-left">
+          <div class="entry-title">${f.name}${f.brand ? ' · ' + f.brand : ''}</div>
+          <div class="entry-sub">${f.kcal_per_100g || '—'} kcal · P${f.protein_per_100g || 0} · C${f.carbs_per_100g || 0} · F${f.fat_per_100g || 0} (per 100g)</div>
+        </div>
+        <span class="source-pill ${f.source === 'custom' ? 'local' : ''}">${f.source}</span>
+        <button class="btn btn-sm btn-danger" onclick="deleteFood(${f.id})">✕</button>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
+}
+
+async function deleteFood(id) {
+  if (!confirm('Delete this food?')) return;
+  try { await api('DELETE', `/foods/${id}`); toast('Deleted'); loadFoods(); }
+  catch(e) { toast('Cannot delete — used in meals', true); }
+}
+
+function searchOFF() {
+  clearTimeout(searchTimer);
+  const q = document.getElementById('off-search').value.trim();
+  const resultsEl = document.getElementById('off-results');
+  if (q.length < 2) { resultsEl.style.display = 'none'; return; }
+  searchTimer = setTimeout(async () => {
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = '<div class="loading">Searching Open Food Facts...</div>';
+    try {
+      const results = await api('GET', `/foods/off/search?q=${encodeURIComponent(q)}`);
+      if (!results.length) {
+        resultsEl.innerHTML = '<div class="search-result"><div class="search-result-info"><div class="search-result-name" style="color:var(--muted)">No results</div></div></div>';
+        return;
+      }
+      resultsEl.innerHTML = results.map(f => `
+        <div class="search-result" onclick='importFood(${JSON.stringify(f).replace(/'/g, "&apos;")})'>
+          <div class="search-result-info">
+            <div class="search-result-name">${f.name}${f.brand ? ' · ' + f.brand : ''}</div>
+            <div class="search-result-sub">${f.kcal_per_100g || '—'} kcal · ${f.protein_per_100g || 0}g P · ${f.fat_per_100g || 0}g F / 100g</div>
+          </div>
+          <span class="source-pill">+ IMPORT</span>
+        </div>`).join('');
+    } catch(e) { resultsEl.innerHTML = '<div class="search-result"><div class="search-result-info"><div class="search-result-name" style="color:var(--danger)">Search failed</div></div></div>'; }
+  }, 400);
+}
+
+async function importFood(food) {
+  try {
+    await api('POST', '/foods/import', food);
+    toast(`${food.name} added ✓`);
+    document.getElementById('off-search').value = '';
+    document.getElementById('off-results').style.display = 'none';
+    loadFoods();
+  } catch(e) { toast('Already in library?', true); }
+}
+
+async function addCustomFood() {
+  const name = document.getElementById('cf-name').value.trim();
+  if (!name) { toast('Enter a name', true); return; }
+  try {
+    await api('POST', '/foods', {
+      name,
+      kcal_per_100g: parseFloat(document.getElementById('cf-kcal').value) || null,
+      protein_per_100g: parseFloat(document.getElementById('cf-prot').value) || null,
+      carbs_per_100g: parseFloat(document.getElementById('cf-carbs').value) || null,
+      fat_per_100g: parseFloat(document.getElementById('cf-fat').value) || null,
+    });
+    toast('Food added ✓');
+    ['cf-name','cf-kcal','cf-prot','cf-carbs','cf-fat'].forEach(id => document.getElementById(id).value = '');
+    loadFoods();
+  } catch(e) { toast('Error adding food', true); }
+}
+
+// ── Weight ──
+async function loadWeights() {
+  const el = document.getElementById('weight-list');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const entries = await api('GET', '/weight?limit=60');
+    el.innerHTML = entries.length
+      ? entries.map(w => `
+          <div class="entry">
+            <div class="entry-left">
+              <div class="entry-date">${w.log_date}</div>
+              <div class="entry-title">${w.weight_kg} kg ${w.waist_cm ? '· waist ' + w.waist_cm + ' cm' : ''}</div>
+              ${w.rolling_7d_avg ? `<div class="entry-sub">7d avg: ${w.rolling_7d_avg} kg</div>` : ''}
+              ${w.notes ? `<div class="entry-sub">${w.notes}</div>` : ''}
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteWeight(${w.id})">Delete</button>
+          </div>`).join('')
+      : '<div class="empty"><div class="empty-icon">⚖️</div>No entries yet</div>';
+  } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
+}
+
+async function saveWeight() {
+  try {
+    await api('POST', '/weight', {
+      log_date: document.getElementById('w-date').value,
+      weight_kg: parseFloat(document.getElementById('w-kg').value),
+      waist_cm: parseFloat(document.getElementById('w-waist').value) || null,
+      notes: document.getElementById('w-notes').value || null,
+    });
+    toast('Weight saved ✓');
+    ['w-kg','w-waist','w-notes'].forEach(id => document.getElementById(id).value = '');
+    loadWeights();
+  } catch(e) { toast('Error saving weight', true); }
+}
+
+async function deleteWeight(id) {
+  if (!confirm('Delete this entry?')) return;
+  try { await api('DELETE', `/weight/${id}`); toast('Deleted'); loadWeights(); }
+  catch(e) { toast('Error deleting', true); }
+}
+
+// ── Workouts ──
+async function loadWorkouts() {
+  const el = document.getElementById('workout-list');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const wos = await api('GET', '/workouts?limit=30');
+    el.innerHTML = wos.length
+      ? wos.map(w => `
+          <div class="entry">
+            <div class="entry-left">
+              <div class="entry-date">${w.log_date} · <span class="badge badge-green">${w.session_type || 'Workout'}</span></div>
+              <div class="entry-title">${w.duration_min ? w.duration_min + ' min' : ''}${w.rpe ? ' · RPE ' + w.rpe : ''}</div>
+              ${w.sets?.length ? `<div class="entry-sub">${[...new Set(w.sets.map(s => s.exercise))].join(', ')}</div>` : ''}
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteWorkout(${w.id})">Delete</button>
+          </div>`).join('')
+      : '<div class="empty"><div class="empty-icon">🏋️</div>No workouts yet</div>';
+  } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
+}
+
+function addExercise() {
+  exerciseCount++;
+  const id = exerciseCount;
+  const c = document.getElementById('exercises-container');
+  const div = document.createElement('div');
+  div.className = 'exercise-block';
+  div.id = 'ex-' + id;
+  div.innerHTML = `
+    <div class="exercise-header">
+      <input type="text" placeholder="Exercise name (e.g. Squat)" id="ex-name-${id}">
+      <button class="btn btn-sm btn-danger" onclick="document.getElementById('ex-${id}').remove()">Remove</button>
+    </div>
+    <table class="sets-table">
+      <thead><tr><th style="width:40px">Set</th><th>Reps</th><th>Weight (kg)</th><th>Notes</th></tr></thead>
+      <tbody id="ex-sets-${id}"></tbody>
+    </table>
+    <button class="btn btn-sm" onclick="addSet(${id})" style="margin-top:8px">+ Add set</button>`;
+  c.appendChild(div);
+  addSet(id);
+}
+
+function addSet(exId) {
+  const c = document.getElementById('ex-sets-' + exId);
+  const setNum = c.children.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="set-num">${setNum}</td>
+    <td><input type="number" placeholder="10"></td>
+    <td><input type="number" placeholder="0" step="0.5"></td>
+    <td><input type="text" placeholder="—"></td>`;
+  c.appendChild(tr);
+}
+
+async function saveWorkout() {
+  const sets = [];
+  document.querySelectorAll('.exercise-block').forEach(eb => {
+    const id = eb.id.replace('ex-','');
+    const name = document.getElementById('ex-name-' + id)?.value?.trim();
+    if (!name) return;
+    document.querySelectorAll('#ex-sets-' + id + ' tr').forEach((sr, i) => {
+      const inputs = sr.querySelectorAll('input');
+      sets.push({
+        exercise: name,
+        set_number: i + 1,
+        reps: parseInt(inputs[0]?.value) || null,
+        weight_kg: parseFloat(inputs[1]?.value) || null,
+        notes: inputs[2]?.value || null,
+      });
+    });
+  });
+  try {
+    await api('POST', '/workouts', {
+      log_date: document.getElementById('wo-date').value,
+      session_type: document.getElementById('wo-type').value,
+      duration_min: parseInt(document.getElementById('wo-dur').value) || null,
+      rpe: parseInt(document.getElementById('wo-rpe').value) || null,
+      notes: document.getElementById('wo-notes').value || null,
+      sets,
+    });
+    toast('Workout saved ✓');
+    document.getElementById('exercises-container').innerHTML = '';
+    document.getElementById('wo-notes').value = '';
+    exerciseCount = 0;
+    loadWorkouts();
+  } catch(e) { toast('Error saving workout', true); }
+}
+
+async function deleteWorkout(id) {
+  if (!confirm('Delete this workout?')) return;
+  try { await api('DELETE', `/workouts/${id}`); toast('Deleted'); loadWorkouts(); }
+  catch(e) { toast('Error deleting', true); }
+}
+</script>
+</body>
+</html>
