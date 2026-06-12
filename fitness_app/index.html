@@ -139,6 +139,9 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .dev-badge { display: none; margin-top: 8px; padding: 3px 8px; background: #ff9f0a20; border: 1px solid #ff9f0a60; border-radius: 6px; font-size: 10px; font-family: var(--font-mono); font-weight: 600; letter-spacing: 0.1em; color: #ff9f0a; text-transform: uppercase; }
+  .dev-badge.visible { display: inline-block; }
 </style>
 </head>
 <body>
@@ -148,6 +151,7 @@
     <div class="nav-brand">
       <h1>LIFT LOG</h1>
       <p>83 kg · cut phase</p>
+      <span class="dev-badge" id="dev-badge">⚠ DEV :8001</span>
     </div>
     <div class="nav-links">
       <button class="nav-link active" onclick="showPage('dashboard', this)"><span class="icon">◈</span> Dashboard</button>
@@ -337,7 +341,13 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://localhost:8000';
+// Derive API base from the page's own host so dev (8001) and prod (8000) both work
+const API = `${window.location.protocol}//${window.location.host}`;
+
+// Show dev indicator when running on the dev port
+if (window.location.port === '8001') {
+  document.getElementById('dev-badge').classList.add('visible');
+}
 const today = new Date().toISOString().split('T')[0];
 let exerciseCount = 0;
 let selectedItems = [];

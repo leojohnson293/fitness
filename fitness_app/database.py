@@ -5,10 +5,9 @@ Database connection using asyncpg (async PostgreSQL driver).
 import os
 import asyncpg
 
-DB_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://leom.johnson:password@localhost:5432/fitness"
-)
+DB_URL = os.environ.get("DATABASE_URL")
+if not DB_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set — use run.sh or export it manually")
 
 _pool = None
 
