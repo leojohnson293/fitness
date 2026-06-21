@@ -1,0 +1,31 @@
+
+name: CD — Deploy to Prod
+ 
+on:
+  push:
+    branches: [main]
+ 
+jobs:
+  deploy:
+    runs-on: self-hosted  # your Mac runner
+ 
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+ 
+      - name: Install/update dependencies
+        run: |
+          cd fitness_app
+          pip install -r requirements.txt --break-system-packages
+ 
+      - name: Run migrations and restart prod server
+        run: |
+          # Stop any existing prod instance
+          pkill -f "uvicorn main:app.*8000" || true
+          sleep 2
+ 
+          # run.sh handles migrations + startup
+          nohup ./run.sh prod > /tmp/fitness_prod.log 2>&1 &
+ 
+          echo "✅ Prod server restarted on port 8000"
+          echo "📋 Logs: tail -f /tmp/fitness_prod.log"
