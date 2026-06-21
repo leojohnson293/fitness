@@ -15,6 +15,14 @@ fi
 # Load env vars
 export $(grep -v '^#' "$ENV_FILE" | xargs)
 
+echo "🔄 Running migrations [$ENV] → $DATABASE_URL"
+python db/migrate.py
+ 
+if [ $? -ne 0 ]; then
+  echo "❌ Migrations failed — aborting startup"
+  exit 1
+fi
+
 echo "🚀 Starting [$ENV] on port $PORT → db: $DATABASE_URL"
 cd fitness_app
 uvicorn main:app --host 0.0.0.0 --port "$PORT" --reload
