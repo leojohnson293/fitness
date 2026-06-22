@@ -152,7 +152,7 @@
   <nav>
     <div class="nav-brand">
       <h1>LIFT LOG</h1>
-      <p>83 kg · cut phase</p>
+      <p>80 kg · maintenance</p>
       <span class="dev-badge" id="dev-badge">⚠ DEV :8001</span>
     </div>
     <div class="nav-links">
@@ -164,8 +164,8 @@
       <button class="nav-link" onclick="showPage('workout', this)"><span class="icon">◆</span> Workout</button>
     </div>
     <div class="nav-targets">
-      <strong>Cut targets</strong>
-      2,258 kcal<br>183g protein<br>146g carbs<br>75g fat
+      <strong>Maintenance targets</strong>
+      2,720 kcal<br>176g protein<br>280g carbs<br>75g fat
     </div>
   </nav>
 
@@ -178,19 +178,19 @@
         <div class="stat">
           <div class="stat-label">Calories today</div>
           <div class="stat-val" id="stat-kcal">—</div>
-          <div class="stat-unit">/ 2,258 kcal</div>
+          <div class="stat-unit">/ 2,720 kcal</div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="prog-kcal" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
           <div class="stat-label">Protein today</div>
           <div class="stat-val" id="stat-prot">—</div>
-          <div class="stat-unit">/ 183g target</div>
+          <div class="stat-unit">/ 176g target</div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill blue" id="prog-prot" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
           <div class="stat-label">Carbs today</div>
           <div class="stat-val" id="stat-carbs">—</div>
-          <div class="stat-unit">/ 146g target</div>
+          <div class="stat-unit">/ 280g target</div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill orange" id="prog-carbs" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
@@ -427,10 +427,10 @@ async function loadDashboard() {
     document.getElementById('stat-carbs').textContent = Math.round(carbs) + 'g';
     document.getElementById('stat-fat').textContent   = Math.round(fat) + 'g';
 
-    document.getElementById('prog-kcal').style.width  = Math.min(100, Math.round(kcal / 22.58)) + '%';
-    document.getElementById('prog-kcal').className    = 'progress-fill' + (kcal > 2258 ? ' over' : '');
-    document.getElementById('prog-prot').style.width  = Math.min(100, Math.round(prot / 1.83)) + '%';
-    document.getElementById('prog-carbs').style.width = Math.min(100, Math.round(carbs / 1.46)) + '%';
+    document.getElementById('prog-kcal').style.width  = Math.min(100, Math.round(kcal / 27.20)) + '%';
+    document.getElementById('prog-kcal').className    = 'progress-fill' + (kcal > 2720 ? ' over' : '');
+    document.getElementById('prog-prot').style.width  = Math.min(100, Math.round(prot / 1.76)) + '%';
+    document.getElementById('prog-carbs').style.width = Math.min(100, Math.round(carbs / 2.80)) + '%';
     document.getElementById('prog-fat').style.width   = Math.min(100, Math.round(fat / 0.75)) + '%';
 
     if (weights.length) {
