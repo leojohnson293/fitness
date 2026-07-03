@@ -13,19 +13,18 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v4
  
-      - name: Install/update dependencies
+      - name: Build and restart prod container
         run: |
           cd fitness_app
           pip install -r requirements.txt --break-system-packages
  
       - name: Run migrations and restart prod server
         run: |
-          # Stop any existing prod instance
-          pkill -f "uvicorn main:app.*8000" || true
-          sleep 2
+          # Stop and remove existing prod container
+          docker compose -f docker-compose.prod.yml down
  
-          # run.sh handles migrations + startup
-          nohup ./run.sh prod > /tmp/fitness_prod.log 2>&1 &
+          # Rebuild image and start fresh
+          docker compose -f docker-compose.prod.yml up --build -d
  
-          echo "✅ Prod server restarted on port 8000"
-          echo "📋 Logs: tail -f /tmp/fitness_prod.log"
+          echo "✅ Prod container restarted on port 8000"
+          echo "📋 Logs: docker compose -f docker-compose.prod.yml logs -f"

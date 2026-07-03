@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://leom.johnson:password@host.docker.internal:5432/fitness
+      - PORT=8000
+      - ENV=prod
+    restart: unless-stopped   # auto-restart if container crashes
