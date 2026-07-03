@@ -217,3 +217,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 fitness_app/venv/
+**/__pycache__/
+**/*.pyc
+**/.DS_Store
+fitness_app/localhost.session.sql
