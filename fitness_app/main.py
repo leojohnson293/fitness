@@ -49,9 +49,11 @@ app.include_router(weight.router,    prefix="/weight",    tags=["Weight"])
 app.include_router(workouts.router,  prefix="/workouts",  tags=["Workouts"])
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 @app.get("/", tags=["Frontend"], include_in_schema=False)
 async def serve_frontend():
-    return FileResponse("index.html")
+    return FileResponse(os.path.join(BASE_DIR, "index.html"))
 
 @app.get("/health", tags=["Health"])
 async def root():
