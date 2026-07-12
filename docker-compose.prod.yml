@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    image: fitness-app:prod
+    image: fitness-app:prod   
     ports:
       - "8000:8000"
     environment:

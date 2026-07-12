@@ -2,7 +2,6 @@ services:
   app:
     build: .
     image: fitness-app:dev
-
     ports:
       - "8001:8000"
     environment:
