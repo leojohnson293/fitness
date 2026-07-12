@@ -144,6 +144,10 @@
 
   .dev-badge { display: none; margin-top: 8px; padding: 3px 8px; background: #ff9f0a20; border: 1px solid #ff9f0a60; border-radius: 6px; font-size: 10px; font-family: var(--font-mono); font-weight: 600; letter-spacing: 0.1em; color: #ff9f0a; text-transform: uppercase; }
   .dev-badge.visible { display: inline-block; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 500; overflow-y: auto; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 22px; width: min(600px, 100%); }
 </style>
 </head>
 <body>
@@ -152,7 +156,7 @@
   <nav>
     <div class="nav-brand">
       <h1>LIFT LOG</h1>
-      <p>80 kg · cut</p>
+      <p>80 kg · maintenance</p>
       <span class="dev-badge" id="dev-badge">⚠ DEV :8001</span>
     </div>
     <div class="nav-links">
@@ -164,8 +168,8 @@
       <button class="nav-link" onclick="showPage('workout', this)"><span class="icon">◆</span> Workout</button>
     </div>
     <div class="nav-targets">
-      <strong>Cut targets</strong>
-      2,176 kcal<br>176g protein<br>206g carbs<br>72g fat
+      <strong>Maintenance targets</strong>
+      2,720 kcal<br>176g protein<br>280g carbs<br>75g fat
     </div>
   </nav>
 
@@ -178,7 +182,7 @@
         <div class="stat">
           <div class="stat-label">Calories today</div>
           <div class="stat-val" id="stat-kcal">—</div>
-          <div class="stat-unit">/ 2,176 kcal</div>
+          <div class="stat-unit">/ 2,720 kcal</div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="prog-kcal" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
@@ -190,13 +194,13 @@
         <div class="stat">
           <div class="stat-label">Carbs today</div>
           <div class="stat-val" id="stat-carbs">—</div>
-          <div class="stat-unit">/ 206g target</div>
+          <div class="stat-unit">/ 280g target</div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill orange" id="prog-carbs" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
           <div class="stat-label">Fat today</div>
           <div class="stat-val" id="stat-fat">—</div>
-          <div class="stat-unit">/ 72g target</div>
+          <div class="stat-unit">/ 75g target</div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill purple" id="prog-fat" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
@@ -237,7 +241,7 @@
               <option>Pre-workout</option><option>Dinner</option><option>Other</option>
             </select>
           </div>
-          <div class="form-group full"><label>Description (optional)</label><input type="text" id="d-desc" placeholder="e.g. Post-gym lunch"></div>
+          <div class="form-group full"><label>Description</label><input type="text" id="d-desc" placeholder="e.g. Post-gym lunch"></div>
         </div>
 
         <hr class="section-sep" style="margin:20px 0">
@@ -259,6 +263,19 @@
         <div class="form-actions">
           <button class="btn btn-accent" onclick="saveMeal()">Save meal</button>
           <button class="btn" onclick="saveAsTemplate()">Save as template</button>
+        </div>
+
+        <hr class="section-sep" style="margin:20px 0">
+        <div class="card-title">Or log macros manually</div>
+        <p style="font-size:12px;color:var(--muted);margin:0 0 10px">No food items — just enter the macros directly. Uses the date, meal type and description above.</p>
+        <div class="form-grid four">
+          <div class="form-group"><label>kcal</label><input type="number" id="ml-kcal" placeholder="500"></div>
+          <div class="form-group"><label>Protein (g)</label><input type="number" step="0.1" id="ml-prot" placeholder="40"></div>
+          <div class="form-group"><label>Carbs (g)</label><input type="number" step="0.1" id="ml-carbs" placeholder="50"></div>
+          <div class="form-group"><label>Fat (g)</label><input type="number" step="0.1" id="ml-fat" placeholder="15"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-accent" onclick="saveManualMeal()">Log manual meal</button>
         </div>
       </div>
 
@@ -339,6 +356,7 @@
         </div>
 
         <p class="card-title" style="margin:20px 0 10px">Exercises</p>
+        <datalist id="exercise-list"></datalist>
         <div id="exercises-container"></div>
         <button class="btn btn-sm" onclick="addExercise()" style="margin-bottom:12px">+ Add exercise</button>
 
@@ -350,6 +368,10 @@
     </div>
 
   </main>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if (event.target === this) closeModal()">
+  <div class="modal" id="modal-body"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -386,7 +408,7 @@ function showPage(name, btnEl) {
 
   if (name === 'diet')      { loadMeals(); loadTemplatesQuick(); }
   if (name === 'weight')    loadWeights();
-  if (name === 'workout')   loadWorkouts();
+  if (name === 'workout')   { loadWorkouts(); loadExerciseOptions(); }
   if (name === 'foods')     loadFoods();
   if (name === 'templates') loadTemplates();
   if (name === 'dashboard') loadDashboard();
@@ -539,11 +561,13 @@ function renderMacroTotals() {
 
 async function saveMeal() {
   if (!selectedItems.length) { toast('Add at least one food', true); return; }
+  const desc = document.getElementById('d-desc').value.trim();
+  if (!desc) { toast('Description is required', true); return; }
   try {
     await api('POST', '/meals', {
       log_date: document.getElementById('d-date').value,
       meal_type: document.getElementById('d-type').value,
-      description: document.getElementById('d-desc').value || null,
+      description: desc,
       items: selectedItems.map(i => ({ food_id: i.food.id, grams: i.grams })),
     });
     toast('Meal saved ✓');
@@ -588,7 +612,10 @@ async function loadMeals() {
                 ${m.fat_g ? `<div class="macro"><span>${m.fat_g}g</span> fat</div>` : ''}
               </div>
             </div>
-            <button class="btn btn-sm btn-danger" onclick="deleteMeal(${m.id})">Delete</button>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="editMeal(${m.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteMeal(${m.id})">Delete</button>
+            </div>
           </div>`).join('')
       : '<div class="empty"><div class="empty-icon">🥗</div>No meals yet</div>';
   } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
@@ -631,6 +658,7 @@ async function loadTemplates() {
         <div class="template-meta">${t.items.length} items · ${t.meal_type || 'any'}</div>
         <div class="template-actions">
           <button class="btn btn-sm btn-accent" onclick="useTemplate(${t.id})">Apply today</button>
+          <button class="btn btn-sm" onclick="openTemplate(${t.id})">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteTemplate(${t.id})">✕</button>
         </div>
       </div>`).join('')}</div>`;
@@ -649,6 +677,217 @@ async function deleteTemplate(id) {
   if (!confirm('Delete this template?')) return;
   try { await api('DELETE', `/templates/${id}`); toast('Deleted'); loadTemplates(); }
   catch(e) { toast('Error deleting', true); }
+}
+
+// ── Modal helpers ──
+function openModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal-body').innerHTML = '';
+}
+
+const MEAL_TYPES = ['Breakfast', 'Mid-morning snack', 'Lunch', 'Pre-workout', 'Dinner', 'Other'];
+function mealTypeOptions(sel) {
+  return MEAL_TYPES.map(t => `<option ${t === sel ? 'selected' : ''}>${t}</option>`).join('');
+}
+function escAttr(s) { return s ? String(s).replace(/"/g, '&quot;') : ''; }
+
+// ── Manual meal logging ──
+async function saveManualMeal() {
+  const kcal = parseFloat(document.getElementById('ml-kcal').value);
+  if (Number.isNaN(kcal)) { toast('Enter at least calories', true); return; }
+  const desc = document.getElementById('d-desc').value.trim();
+  if (!desc) { toast('Description is required', true); return; }
+  try {
+    await api('POST', '/meals', {
+      log_date: document.getElementById('d-date').value,
+      meal_type: document.getElementById('d-type').value,
+      description: desc,
+      calories: Math.round(kcal),
+      protein_g: parseFloat(document.getElementById('ml-prot').value) || 0,
+      carbs_g: parseFloat(document.getElementById('ml-carbs').value) || 0,
+      fat_g: parseFloat(document.getElementById('ml-fat').value) || 0,
+      items: [],
+    });
+    toast('Meal logged ✓');
+    ['ml-kcal', 'ml-prot', 'ml-carbs', 'ml-fat'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('d-desc').value = '';
+    loadMeals();
+  } catch (e) { toast('Error logging meal', true); }
+}
+
+// ── Edit meal ──
+async function editMeal(id) {
+  try {
+    const m = await api('GET', `/meals/${id}`);
+    const manual = !m.items || !m.items.length;
+    openModal(`
+      <div class="card-title">Edit meal</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Date</label><input type="date" id="e-date" value="${m.log_date}"></div>
+        <div class="form-group"><label>Meal type</label><select id="e-type">${mealTypeOptions(m.meal_type)}</select></div>
+        <div class="form-group full"><label>Description</label><input type="text" id="e-desc" value="${escAttr(m.description)}"></div>
+      </div>
+      ${manual ? `
+      <div class="form-grid four" style="margin-top:10px">
+        <div class="form-group"><label>kcal</label><input type="number" id="e-kcal" value="${m.calories ?? ''}"></div>
+        <div class="form-group"><label>Protein (g)</label><input type="number" step="0.1" id="e-prot" value="${m.protein_g ?? ''}"></div>
+        <div class="form-group"><label>Carbs (g)</label><input type="number" step="0.1" id="e-carbs" value="${m.carbs_g ?? ''}"></div>
+        <div class="form-group"><label>Fat (g)</label><input type="number" step="0.1" id="e-fat" value="${m.fat_g ?? ''}"></div>
+      </div>` : `
+      <p style="font-size:12px;color:var(--muted);margin-top:10px">
+        Macros for this meal are calculated from its food items, so they can't be edited directly here.
+      </p>`}
+      <div class="form-actions">
+        <button class="btn btn-accent" onclick="saveMealEdit(${m.id}, ${manual})">Save changes</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    `);
+  } catch (e) { toast('Could not load meal', true); }
+}
+
+async function saveMealEdit(id, manual) {
+  const body = {
+    log_date: document.getElementById('e-date').value,
+    meal_type: document.getElementById('e-type').value,
+    description: document.getElementById('e-desc').value || null,
+  };
+  if (manual) {
+    const kcal = parseFloat(document.getElementById('e-kcal').value);
+    if (!Number.isNaN(kcal)) body.calories = Math.round(kcal);
+    const p = parseFloat(document.getElementById('e-prot').value);
+    if (!Number.isNaN(p)) body.protein_g = p;
+    const c = parseFloat(document.getElementById('e-carbs').value);
+    if (!Number.isNaN(c)) body.carbs_g = c;
+    const f = parseFloat(document.getElementById('e-fat').value);
+    if (!Number.isNaN(f)) body.fat_g = f;
+  }
+  try {
+    await api('PATCH', `/meals/${id}`, body);
+    toast('Meal updated ✓');
+    closeModal();
+    loadMeals();
+    loadDashboard();
+  } catch (e) { toast('Error updating meal', true); }
+}
+
+// ── Edit template ──
+let tplItems = [];
+let tplSearchTimer = null;
+
+async function openTemplate(id) {
+  try {
+    const t = await api('GET', `/templates/${id}`);
+    tplItems = t.items.map(i => ({
+      food_id: i.food_id,
+      grams: Number(i.grams),
+      name: i.food ? (i.food.name + (i.food.brand ? ' · ' + i.food.brand : '')) : ('Food #' + i.food_id),
+      kcal: i.food ? Number(i.food.kcal_per_100g || 0) : 0,
+      prot: i.food ? Number(i.food.protein_per_100g || 0) : 0,
+    }));
+    openModal(`
+      <div class="card-title">Edit template</div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Name</label><input type="text" id="t-name" value="${escAttr(t.name)}"></div>
+        <div class="form-group"><label>Meal type</label><select id="t-type">${mealTypeOptions(t.meal_type)}</select></div>
+        <div class="form-group"><label>Description</label><input type="text" id="t-desc" value="${escAttr(t.description)}"></div>
+      </div>
+      <hr class="section-sep" style="margin:16px 0">
+      <div class="card-title">Items</div>
+      <div id="tpl-items"></div>
+      <div class="search-wrap" style="margin-top:10px">
+        <input type="text" id="tpl-search" placeholder="Add a food from your library..." oninput="searchTplFoods()">
+        <div class="search-results" id="tpl-search-results" style="display:none"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-accent" onclick="saveTemplateEdit(${t.id})">Save changes</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+      </div>
+    `);
+    renderTplItems();
+  } catch (e) { toast('Could not load template', true); }
+}
+
+function renderTplItems() {
+  const el = document.getElementById('tpl-items');
+  if (!el) return;
+  if (!tplItems.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px">No items — add foods below.</div>';
+    return;
+  }
+  let kcal = 0, prot = 0;
+  tplItems.forEach(i => { kcal += i.kcal * i.grams / 100; prot += i.prot * i.grams / 100; });
+  el.innerHTML = tplItems.map((i, idx) => `
+    <div class="item-row">
+      <div class="item-info">
+        <div class="item-name">${i.name}</div>
+        <div class="item-macros">${i.kcal || '—'} kcal · ${i.prot || 0}g P / 100g</div>
+      </div>
+      <input type="number" class="item-grams" value="${i.grams}" min="0" onchange="updateTplGrams(${idx}, this.value)">
+      <span style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">g</span>
+      <button class="item-remove" onclick="removeTplItem(${idx})">✕</button>
+    </div>`).join('')
+    + `<div style="margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--font-mono)">≈ ${Math.round(kcal)} kcal · ${prot.toFixed(1)}g protein</div>`;
+}
+
+function updateTplGrams(idx, val) { tplItems[idx].grams = parseFloat(val) || 0; renderTplItems(); }
+function removeTplItem(idx) { tplItems.splice(idx, 1); renderTplItems(); }
+
+function searchTplFoods() {
+  clearTimeout(tplSearchTimer);
+  const q = document.getElementById('tpl-search').value.trim();
+  const resultsEl = document.getElementById('tpl-search-results');
+  if (q.length < 1) { resultsEl.style.display = 'none'; return; }
+  tplSearchTimer = setTimeout(async () => {
+    try {
+      const results = await api('GET', `/foods/search?q=${encodeURIComponent(q)}`);
+      resultsEl.innerHTML = results.length
+        ? results.map(f => `
+          <div class="search-result" onclick='addTplFood(${JSON.stringify(f).replace(/'/g, "&apos;")})'>
+            <div class="search-result-info">
+              <div class="search-result-name">${f.name}${f.brand ? ' · ' + f.brand : ''}</div>
+              <div class="search-result-sub">${f.kcal_per_100g || '—'} kcal / 100g</div>
+            </div>
+            <span class="source-pill local">+ ADD</span>
+          </div>`).join('')
+        : `<div class="search-result"><div class="search-result-info"><div class="search-result-name" style="color:var(--muted)">No matches in your library</div></div></div>`;
+      resultsEl.style.display = 'block';
+    } catch (e) { toast('Search failed', true); }
+  }, 200);
+}
+
+function addTplFood(f) {
+  tplItems.push({
+    food_id: f.id,
+    grams: 100,
+    name: f.name + (f.brand ? ' · ' + f.brand : ''),
+    kcal: Number(f.kcal_per_100g || 0),
+    prot: Number(f.protein_per_100g || 0),
+  });
+  document.getElementById('tpl-search').value = '';
+  document.getElementById('tpl-search-results').style.display = 'none';
+  renderTplItems();
+}
+
+async function saveTemplateEdit(id) {
+  const name = document.getElementById('t-name').value.trim();
+  if (!name) { toast('Name is required', true); return; }
+  if (!tplItems.length) { toast('Template needs at least one item', true); return; }
+  try {
+    await api('PATCH', `/templates/${id}`, {
+      name,
+      meal_type: document.getElementById('t-type').value,
+      description: document.getElementById('t-desc').value || null,
+      items: tplItems.map(i => ({ food_id: i.food_id, grams: i.grams })),
+    });
+    toast('Template updated ✓');
+    closeModal();
+    loadTemplates();
+    loadTemplatesQuick();
+  } catch (e) { toast('Error updating template', true); }
 }
 
 // ── Foods ──
@@ -793,6 +1032,14 @@ async function loadWorkouts() {
   } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
 }
 
+async function loadExerciseOptions() {
+  try {
+    const exercises = await api('GET', '/workouts/exercises');
+    document.getElementById('exercise-list').innerHTML =
+      exercises.map(e => `<option value="${escAttr(e)}">`).join('');
+  } catch (e) { /* autocomplete is a nice-to-have — fail silently */ }
+}
+
 function addExercise() {
   exerciseCount++;
   const id = exerciseCount;
@@ -802,7 +1049,7 @@ function addExercise() {
   div.id = 'ex-' + id;
   div.innerHTML = `
     <div class="exercise-header">
-      <input type="text" placeholder="Exercise name (e.g. Squat)" id="ex-name-${id}">
+      <input type="text" placeholder="Exercise name (e.g. Squat)" id="ex-name-${id}" list="exercise-list">
       <button class="btn btn-sm btn-danger" onclick="document.getElementById('ex-${id}').remove()">Remove</button>
     </div>
     <table class="sets-table">
@@ -828,10 +1075,11 @@ function addSet(exId) {
 
 async function saveWorkout() {
   const sets = [];
+  let missingName = false;
   document.querySelectorAll('.exercise-block').forEach(eb => {
     const id = eb.id.replace('ex-','');
     const name = document.getElementById('ex-name-' + id)?.value?.trim();
-    if (!name) return;
+    if (!name) { missingName = true; return; }
     document.querySelectorAll('#ex-sets-' + id + ' tr').forEach((sr, i) => {
       const inputs = sr.querySelectorAll('input');
       sets.push({
@@ -843,6 +1091,7 @@ async function saveWorkout() {
       });
     });
   });
+  if (missingName) { toast('Every exercise needs a name', true); return; }
   try {
     await api('POST', '/workouts', {
       log_date: document.getElementById('wo-date').value,

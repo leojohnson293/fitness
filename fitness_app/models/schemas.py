@@ -108,6 +108,11 @@ class TemplateOut(BaseModel):
     items:       List[MealItemOut] = []
     created_at:  datetime
 
+class TemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    meal_type: Optional[str] = None
+    description: Optional[str] = None
+    items: Optional[List[MealItemCreate]] = None
 
 # ── Weight ────────────────────────────────────────────────────────────────────
 
