@@ -16,7 +16,7 @@ from fastapi import APIRouter, HTTPException, Body
  
 from database import get_pool
 from models.schemas import (
-    TemplateCreate, TemplateOut,
+    TemplateCreate,TemplateUpdate, TemplateOut,
     MealCreate, MealItemCreate, MealOut,
 )
 from routers.meals import create_meal, _fetch_items
@@ -123,6 +123,57 @@ async def use_template(
     )
     return await create_meal(meal)
  
+
+@router.patch("/{template_id}", response_model=TemplateOut)
+async def update_template(template_id: int, updates: TemplateUpdate):
+    """
+    Update a template's metadata (name, meal_type, description)
+    and/or replace its items entirely.
+ 
+    Items semantics: if `items` is provided, the existing items are
+    deleted and replaced with the new list (replace-all). If `items`
+    is omitted, existing items are left untouched.
+    """
+    data = updates.model_dump(exclude_unset=True)
+    items = data.pop("items", None)
+    meta = {k: v for k, v in data.items() if v is not None}
+ 
+    if not meta and items is None:
+        raise HTTPException(400, "No fields to update")
+ 
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            if meta:
+                set_clause = ", ".join(f"{k} = ${i+2}" for i, k in enumerate(meta))
+                row = await conn.fetchrow(
+                    f"UPDATE meal_templates SET {set_clause} WHERE id = $1 RETURNING *",
+                    template_id, *meta.values(),
+                )
+            else:
+                row = await conn.fetchrow(
+                    "SELECT * FROM meal_templates WHERE id = $1", template_id
+                )
+            if not row:
+                raise HTTPException(404, "Template not found")
+ 
+            if items is not None:
+                await conn.execute(
+                    "DELETE FROM meal_template_items WHERE template_id = $1",
+                    template_id,
+                )
+                for item in items:
+                    await conn.execute(
+                        """
+                        INSERT INTO meal_template_items (template_id, food_id, grams)
+                        VALUES ($1, $2, $3)
+                        """,
+                        template_id, item["food_id"], item["grams"],
+                    )
+ 
+            d = dict(row)
+            d["items"] = await _fetch_template_items(conn, template_id)
+    return d
  
 @router.delete("/{template_id}", status_code=204)
 async def delete_template(template_id: int):
