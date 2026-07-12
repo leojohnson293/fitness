@@ -20,11 +20,11 @@ jobs:
  
       - name: Run migrations and restart prod server
         run: |
-          # Stop and remove existing prod container
-          docker compose -f docker-compose.prod.yml down
+         # Stop and remove existing prod container (same project name every time)
+          docker compose -f docker-compose.prod.yml -p fitness-prod down
  
           # Rebuild image and start fresh
-          docker compose -f docker-compose.prod.yml up --build -d
+          docker compose -f docker-compose.prod.yml -p fitness-prod up --build -d
  
           echo "✅ Prod container restarted on port 8000"
           echo "📋 Logs: docker compose -f docker-compose.prod.yml logs -f"
