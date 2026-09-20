@@ -53,7 +53,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @app.get("/", tags=["Frontend"], include_in_schema=False)
 async def serve_frontend():
-    return FileResponse(os.path.join(BASE_DIR, "index.html"))
+    # no-cache: browsers revalidate on every load, so a deploy is picked up
+    # immediately instead of running stale JS from an old cached copy
+    return FileResponse(os.path.join(BASE_DIR, "index.html"),
+                        headers={"Cache-Control": "no-cache"})
 
 @app.get("/health", tags=["Health"])
 async def root():

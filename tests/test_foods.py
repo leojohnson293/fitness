@@ -15,9 +15,12 @@ from fastapi.testclient import TestClient
 import main
  
 client = TestClient(main.app)
+
+FAKE_ID    = "00000000-0000-0000-0000-000000000001"
+MISSING_ID = "00000000-0000-0000-0000-000000099999"
  
 FAKE_FOOD = {
-    "id": 1, "name": "PhD Whey Protein", "brand": "PhD",
+    "id": FAKE_ID, "name": "PhD Whey Protein", "brand": "PhD",
     "source": "custom", "external_id": None,
     "kcal_per_100g": 400.0, "protein_per_100g": 80.0,
     "carbs_per_100g": 6.0, "fat_per_100g": 8.0,
@@ -89,14 +92,14 @@ def test_search_local_missing_query():
  
 def test_get_food_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = FAKE_FOOD
-    response = client.get("/foods/1")
+    response = client.get(f"/foods/{FAKE_ID}")
     assert response.status_code == 200
-    assert response.json()["id"] == 1
+    assert response.json()["id"] == FAKE_ID
  
  
 def test_get_food_not_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = None
-    response = client.get("/foods/99999")
+    response = client.get(f"/foods/{MISSING_ID}")
     assert response.status_code == 404
  
  
@@ -104,13 +107,13 @@ def test_get_food_not_found(mock_db_pool):
  
 def test_delete_food_success(mock_db_pool):
     mock_db_pool.execute.return_value = "DELETE 1"
-    response = client.delete("/foods/1")
+    response = client.delete(f"/foods/{FAKE_ID}")
     assert response.status_code == 204
  
  
 def test_delete_food_not_found(mock_db_pool):
     mock_db_pool.execute.return_value = "DELETE 0"
-    response = client.delete("/foods/99999")
+    response = client.delete(f"/foods/{MISSING_ID}")
     assert response.status_code == 404
  
  

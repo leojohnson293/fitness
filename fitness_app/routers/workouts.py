@@ -4,6 +4,7 @@ Workouts router — CRUD for workouts + workout_sets tables.
 
 from datetime import date
 from typing import List, Optional
+from uuid import UUID
 from fastapi import APIRouter, HTTPException
 
 from database import get_pool
@@ -12,7 +13,7 @@ from models.schemas import WorkoutCreate, WorkoutUpdate, WorkoutOut, SetCreate, 
 router = APIRouter()
 
 
-async def _fetch_sets(conn, workout_id: int) -> List[dict]:
+async def _fetch_sets(conn, workout_id: UUID) -> List[dict]:
     rows = await conn.fetch(
         "SELECT * FROM workout_sets WHERE workout_id = $1 ORDER BY set_number",
         workout_id,
@@ -82,7 +83,7 @@ async def list_workouts(
 
 
 @router.get("/{workout_id}", response_model=WorkoutOut)
-async def get_workout(workout_id: int):
+async def get_workout(workout_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -96,7 +97,7 @@ async def get_workout(workout_id: int):
 
 
 @router.patch("/{workout_id}", response_model=WorkoutOut)
-async def update_workout(workout_id: int, updates: WorkoutUpdate):
+async def update_workout(workout_id: UUID, updates: WorkoutUpdate):
     fields = {k: v for k, v in updates.model_dump().items() if v is not None}
     if not fields:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -118,7 +119,7 @@ async def update_workout(workout_id: int, updates: WorkoutUpdate):
 
 
 @router.delete("/{workout_id}", status_code=204)
-async def delete_workout(workout_id: int):
+async def delete_workout(workout_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         result = await conn.execute(
@@ -131,7 +132,7 @@ async def delete_workout(workout_id: int):
 # ── Sets sub-resource ─────────────────────────────────────────────────────────
 
 @router.post("/{workout_id}/sets", response_model=SetOut, status_code=201)
-async def add_set(workout_id: int, s: SetCreate):
+async def add_set(workout_id: UUID, s: SetCreate):
     pool = await get_pool()
     async with pool.acquire() as conn:
         exists = await conn.fetchval(
@@ -153,7 +154,7 @@ async def add_set(workout_id: int, s: SetCreate):
 
 
 @router.delete("/{workout_id}/sets/{set_id}", status_code=204)
-async def delete_set(workout_id: int, set_id: int):
+async def delete_set(workout_id: UUID, set_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         result = await conn.execute(

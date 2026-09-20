@@ -613,8 +613,8 @@ async function loadMeals() {
               </div>
             </div>
             <div style="display:flex;gap:6px">
-              <button class="btn btn-sm" onclick="editMeal(${m.id})">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteMeal(${m.id})">Delete</button>
+              <button class="btn btn-sm" onclick="editMeal('${m.id}')">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteMeal('${m.id}')">Delete</button>
             </div>
           </div>`).join('')
       : '<div class="empty"><div class="empty-icon">🥗</div>No meals yet</div>';
@@ -637,7 +637,7 @@ async function loadTemplatesQuick() {
       return;
     }
     el.innerHTML = `<div class="template-grid">${tpls.slice(0, 6).map(t => `
-      <div class="template-card" onclick="useTemplate(${t.id})">
+      <div class="template-card" onclick="useTemplate('${t.id}')">
         <div class="template-name">${t.name}</div>
         <div class="template-meta">${t.items.length} items · ${t.meal_type || 'any'}</div>
       </div>`).join('')}</div>`;
@@ -657,9 +657,9 @@ async function loadTemplates() {
         <div class="template-name">${t.name}</div>
         <div class="template-meta">${t.items.length} items · ${t.meal_type || 'any'}</div>
         <div class="template-actions">
-          <button class="btn btn-sm btn-accent" onclick="useTemplate(${t.id})">Apply today</button>
-          <button class="btn btn-sm" onclick="openTemplate(${t.id})">Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteTemplate(${t.id})">✕</button>
+          <button class="btn btn-sm btn-accent" onclick="useTemplate('${t.id}')">Apply today</button>
+          <button class="btn btn-sm" onclick="openTemplate('${t.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTemplate('${t.id}')">✕</button>
         </div>
       </div>`).join('')}</div>`;
   } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
@@ -742,7 +742,7 @@ async function editMeal(id) {
         Macros for this meal are calculated from its food items, so they can't be edited directly here.
       </p>`}
       <div class="form-actions">
-        <button class="btn btn-accent" onclick="saveMealEdit(${m.id}, ${manual})">Save changes</button>
+        <button class="btn btn-accent" onclick="saveMealEdit('${m.id}', ${manual})">Save changes</button>
         <button class="btn" onclick="closeModal()">Cancel</button>
       </div>
     `);
@@ -803,7 +803,7 @@ async function openTemplate(id) {
         <div class="search-results" id="tpl-search-results" style="display:none"></div>
       </div>
       <div class="form-actions">
-        <button class="btn btn-accent" onclick="saveTemplateEdit(${t.id})">Save changes</button>
+        <button class="btn btn-accent" onclick="saveTemplateEdit('${t.id}')">Save changes</button>
         <button class="btn" onclick="closeModal()">Cancel</button>
       </div>
     `);
@@ -907,7 +907,7 @@ async function loadFoods() {
           <div class="entry-sub">${f.kcal_per_100g || '—'} kcal · P${f.protein_per_100g || 0} · C${f.carbs_per_100g || 0} · F${f.fat_per_100g || 0} (per 100g)</div>
         </div>
         <span class="source-pill ${f.source === 'custom' ? 'local' : ''}">${f.source}</span>
-        <button class="btn btn-sm btn-danger" onclick="deleteFood(${f.id})">✕</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteFood('${f.id}')">✕</button>
       </div>`).join('');
   } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
 }
@@ -986,7 +986,7 @@ async function loadWeights() {
               ${w.rolling_7d_avg ? `<div class="entry-sub">7d avg: ${w.rolling_7d_avg} kg</div>` : ''}
               ${w.notes ? `<div class="entry-sub">${w.notes}</div>` : ''}
             </div>
-            <button class="btn btn-sm btn-danger" onclick="deleteWeight(${w.id})">Delete</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteWeight('${w.id}')">Delete</button>
           </div>`).join('')
       : '<div class="empty"><div class="empty-icon">⚖️</div>No entries yet</div>';
   } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }
@@ -1026,7 +1026,7 @@ async function loadWorkouts() {
               <div class="entry-title">${w.duration_min ? w.duration_min + ' min' : ''}${w.rpe ? ' · RPE ' + w.rpe : ''}</div>
               ${w.sets?.length ? `<div class="entry-sub">${[...new Set(w.sets.map(s => s.exercise))].join(', ')}</div>` : ''}
             </div>
-            <button class="btn btn-sm btn-danger" onclick="deleteWorkout(${w.id})">Delete</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteWorkout('${w.id}')">Delete</button>
           </div>`).join('')
       : '<div class="empty"><div class="empty-icon">🏋️</div>No workouts yet</div>';
   } catch(e) { el.innerHTML = '<div class="empty">Failed to load</div>'; }

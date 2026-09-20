@@ -4,6 +4,7 @@ Pydantic schemas for request validation and response serialisation.
 
 from datetime import date, datetime
 from typing import Optional, List
+from uuid import UUID
 from pydantic import BaseModel, Field
 
 
@@ -23,7 +24,7 @@ class FoodCreate(FoodBase):
     external_id: Optional[str] = None
 
 class FoodOut(FoodBase):
-    id:          int
+    id:          UUID
     source:      str
     external_id: Optional[str]
     created_at:  datetime
@@ -35,12 +36,12 @@ class FoodOut(FoodBase):
 # ── Meal items ────────────────────────────────────────────────────────────────
 
 class MealItemCreate(BaseModel):
-    food_id: int
+    food_id: UUID
     grams:   float = Field(..., gt=0)
 
 class MealItemOut(BaseModel):
-    id:      int
-    food_id: int
+    id:      UUID
+    food_id: UUID
     grams:   float
     food:    Optional[FoodOut] = None  # populated on read
 
@@ -76,7 +77,7 @@ class MealUpdate(BaseModel):
     fibre_g:     Optional[float] = None
 
 class MealOut(BaseModel):
-    id:          int
+    id:          UUID
     log_date:    date
     meal_type:   Optional[str]
     description: Optional[str]
@@ -101,7 +102,7 @@ class TemplateCreate(BaseModel):
     items:       List[MealItemCreate] = []
 
 class TemplateOut(BaseModel):
-    id:          int
+    id:          UUID
     name:        str
     meal_type:   Optional[str]
     description: Optional[str]
@@ -128,7 +129,7 @@ class WeightUpdate(BaseModel):
     notes:     Optional[str]   = None
 
 class WeightOut(WeightCreate):
-    id:              int
+    id:              UUID
     rolling_7d_avg:  Optional[float] = None
     created_at:      datetime
 
@@ -146,8 +147,8 @@ class SetCreate(BaseModel):
     notes:      Optional[str]   = None
 
 class SetOut(SetCreate):
-    id:         int
-    workout_id: int
+    id:         UUID
+    workout_id: UUID
 
     class Config:
         from_attributes = True
@@ -167,7 +168,7 @@ class WorkoutUpdate(BaseModel):
     notes:        Optional[str] = None
 
 class WorkoutOut(BaseModel):
-    id:           int
+    id:           UUID
     log_date:     date
     session_type: Optional[str]
     duration_min: Optional[int]

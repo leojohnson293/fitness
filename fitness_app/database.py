@@ -26,7 +26,7 @@ async def create_tables():
         await conn.execute("""
             -- ── Foods library ──────────────────────────────────────────────
             CREATE TABLE IF NOT EXISTS foods (
-                id              BIGSERIAL PRIMARY KEY,
+                id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 name            VARCHAR(200) NOT NULL,
                 brand           VARCHAR(100),
                 source          VARCHAR(20) DEFAULT 'custom',
@@ -44,7 +44,7 @@ async def create_tables():
 
             -- ── Existing meals table (unchanged) ─────────────────────────────
             CREATE TABLE IF NOT EXISTS meals (
-                id          BIGSERIAL PRIMARY KEY,
+                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 log_date    DATE NOT NULL,
                 meal_type   VARCHAR(50),
                 description TEXT,
@@ -58,9 +58,9 @@ async def create_tables():
 
             -- ── Meal items: foods + quantities for each meal ────────────────
             CREATE TABLE IF NOT EXISTS meal_items (
-                id          BIGSERIAL PRIMARY KEY,
-                meal_id     BIGINT REFERENCES meals(id) ON DELETE CASCADE,
-                food_id     BIGINT REFERENCES foods(id) ON DELETE RESTRICT,
+                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                meal_id     UUID REFERENCES meals(id) ON DELETE CASCADE,
+                food_id     UUID REFERENCES foods(id) ON DELETE RESTRICT,
                 grams       NUMERIC(7,1) NOT NULL
             );
 
@@ -68,7 +68,7 @@ async def create_tables():
 
             -- ── Meal templates ─────────────────────────────────────────────
             CREATE TABLE IF NOT EXISTS meal_templates (
-                id          BIGSERIAL PRIMARY KEY,
+                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 name        VARCHAR(100) NOT NULL,
                 meal_type   VARCHAR(50),
                 description TEXT,
@@ -76,15 +76,15 @@ async def create_tables():
             );
 
             CREATE TABLE IF NOT EXISTS meal_template_items (
-                id              BIGSERIAL PRIMARY KEY,
-                template_id     BIGINT REFERENCES meal_templates(id) ON DELETE CASCADE,
-                food_id         BIGINT REFERENCES foods(id) ON DELETE RESTRICT,
+                id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                template_id     UUID REFERENCES meal_templates(id) ON DELETE CASCADE,
+                food_id         UUID REFERENCES foods(id) ON DELETE RESTRICT,
                 grams           NUMERIC(7,1) NOT NULL
             );
 
             -- ── Workouts (unchanged) ────────────────────────────────────────
             CREATE TABLE IF NOT EXISTS workouts (
-                id           BIGSERIAL PRIMARY KEY,
+                id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 log_date     DATE NOT NULL,
                 session_type VARCHAR(100),
                 duration_min INTEGER,
@@ -94,8 +94,8 @@ async def create_tables():
             );
 
             CREATE TABLE IF NOT EXISTS workout_sets (
-                id          BIGSERIAL PRIMARY KEY,
-                workout_id  BIGINT REFERENCES workouts(id) ON DELETE CASCADE,
+                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                workout_id  UUID REFERENCES workouts(id) ON DELETE CASCADE,
                 exercise    VARCHAR(100),
                 set_number  SMALLINT,
                 reps        SMALLINT,
@@ -105,7 +105,7 @@ async def create_tables():
 
             -- ── Weight log (unchanged) ──────────────────────────────────────
             CREATE TABLE IF NOT EXISTS weight_log (
-                id          BIGSERIAL PRIMARY KEY,
+                id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 log_date    DATE NOT NULL,
                 weight_kg   NUMERIC(5,2) NOT NULL,
                 waist_cm    NUMERIC(5,1),

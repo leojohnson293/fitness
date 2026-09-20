@@ -4,6 +4,7 @@ Weight router — CRUD for the weight_log table.
 
 from datetime import date
 from typing import List, Optional
+from uuid import UUID
 from fastapi import APIRouter, HTTPException
 
 from database import get_pool
@@ -53,7 +54,7 @@ async def list_weight_entries(
 
 
 @router.get("/{entry_id}", response_model=WeightOut)
-async def get_weight_entry(entry_id: int):
+async def get_weight_entry(entry_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -65,7 +66,7 @@ async def get_weight_entry(entry_id: int):
 
 
 @router.patch("/{entry_id}", response_model=WeightOut)
-async def update_weight_entry(entry_id: int, updates: WeightUpdate):
+async def update_weight_entry(entry_id: UUID, updates: WeightUpdate):
     fields = {k: v for k, v in updates.model_dump().items() if v is not None}
     if not fields:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -85,7 +86,7 @@ async def update_weight_entry(entry_id: int, updates: WeightUpdate):
 
 
 @router.delete("/{entry_id}", status_code=204)
-async def delete_weight_entry(entry_id: int):
+async def delete_weight_entry(entry_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         result = await conn.execute(

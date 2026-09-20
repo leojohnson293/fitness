@@ -14,8 +14,11 @@ import main
 
 client = TestClient(main.app)
 
+FAKE_ID    = "00000000-0000-0000-0000-000000000001"
+MISSING_ID = "00000000-0000-0000-0000-000000099999"
+
 FAKE_TEMPLATE = {
-    "id": 1,
+    "id": FAKE_ID,
     "name": "Post-gym lunch",
     "meal_type": "Lunch",
     "description": "Chicken and rice",
@@ -37,14 +40,14 @@ def test_list_templates_returns_200(mock_db_pool):
 def test_get_template_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = FAKE_TEMPLATE
     mock_db_pool.fetch.return_value = []  # items
-    response = client.get("/templates/1")
+    response = client.get(f"/templates/{FAKE_ID}")
     assert response.status_code == 200
     assert response.json()["name"] == "Post-gym lunch"
 
 
 def test_get_template_not_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = None
-    response = client.get("/templates/99999")
+    response = client.get(f"/templates/{MISSING_ID}")
     assert response.status_code == 404
 
 
@@ -54,7 +57,7 @@ def test_update_template_metadata(mock_db_pool):
     """PATCH with just a name change should return 200."""
     mock_db_pool.fetchrow.return_value = {**FAKE_TEMPLATE, "name": "Renamed lunch"}
     mock_db_pool.fetch.return_value = []
-    response = client.patch("/templates/1", json={"name": "Renamed lunch"})
+    response = client.patch(f"/templates/{FAKE_ID}", json={"name": "Renamed lunch"})
     assert response.status_code == 200
     assert response.json()["name"] == "Renamed lunch"
 
@@ -63,7 +66,7 @@ def test_update_template_meal_type(mock_db_pool):
     """PATCH changing meal_type should return 200."""
     mock_db_pool.fetchrow.return_value = {**FAKE_TEMPLATE, "meal_type": "Dinner"}
     mock_db_pool.fetch.return_value = []
-    response = client.patch("/templates/1", json={"meal_type": "Dinner"})
+    response = client.patch(f"/templates/{FAKE_ID}", json={"meal_type": "Dinner"})
     assert response.status_code == 200
     assert response.json()["meal_type"] == "Dinner"
 
@@ -72,21 +75,21 @@ def test_update_template_items(mock_db_pool):
     """PATCH replacing items should return 200."""
     mock_db_pool.fetchrow.return_value = FAKE_TEMPLATE
     mock_db_pool.fetch.return_value = []
-    response = client.patch("/templates/1", json={
-        "items": [{"food_id": 2, "grams": 150}]
+    response = client.patch(f"/templates/{FAKE_ID}", json={
+        "items": [{"food_id": FAKE_ID, "grams": 150}]
     })
     assert response.status_code == 200
 
 
 def test_update_template_not_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = None
-    response = client.patch("/templates/99999", json={"name": "Ghost"})
+    response = client.patch(f"/templates/{MISSING_ID}", json={"name": "Ghost"})
     assert response.status_code == 404
 
 
 def test_update_template_no_fields(mock_db_pool):
     """PATCH with empty body should return 400."""
-    response = client.patch("/templates/1", json={})
+    response = client.patch(f"/templates/{FAKE_ID}", json={})
     assert response.status_code == 400
 
 
@@ -94,11 +97,11 @@ def test_update_template_no_fields(mock_db_pool):
 
 def test_delete_template_success(mock_db_pool):
     mock_db_pool.execute.return_value = "DELETE 1"
-    response = client.delete("/templates/1")
+    response = client.delete(f"/templates/{FAKE_ID}")
     assert response.status_code == 204
 
 
 def test_delete_template_not_found(mock_db_pool):
     mock_db_pool.execute.return_value = "DELETE 0"
-    response = client.delete("/templates/99999")
+    response = client.delete(f"/templates/{MISSING_ID}")
     assert response.status_code == 404

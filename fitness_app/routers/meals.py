@@ -9,6 +9,7 @@ pass in are used directly (legacy / quick-log path).
 import json
 from datetime import date
 from typing import List, Optional
+from uuid import UUID
 from fastapi import APIRouter, HTTPException
  
 from database import get_pool
@@ -162,7 +163,7 @@ async def nutrition_summary(
  
  
 @router.get("/{meal_id}", response_model=MealOut)
-async def get_meal(meal_id: int):
+async def get_meal(meal_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT * FROM meals WHERE id = $1", meal_id)
@@ -174,7 +175,7 @@ async def get_meal(meal_id: int):
  
  
 @router.patch("/{meal_id}", response_model=MealOut)
-async def update_meal(meal_id: int, updates: MealUpdate):
+async def update_meal(meal_id: UUID, updates: MealUpdate):
     fields = {k: v for k, v in updates.model_dump().items() if v is not None}
     if not fields:
         raise HTTPException(400, "No fields to update")
@@ -196,7 +197,7 @@ async def update_meal(meal_id: int, updates: MealUpdate):
  
  
 @router.delete("/{meal_id}", status_code=204)
-async def delete_meal(meal_id: int):
+async def delete_meal(meal_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         result = await conn.execute("DELETE FROM meals WHERE id = $1", meal_id)

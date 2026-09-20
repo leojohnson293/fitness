@@ -12,6 +12,7 @@ Endpoints:
 import json
 from datetime import date as DateType
 from typing import List
+from uuid import UUID
 from fastapi import APIRouter, HTTPException, Body
  
 from database import get_pool
@@ -87,7 +88,7 @@ async def list_templates():
  
  
 @router.get("/{template_id}", response_model=TemplateOut)
-async def get_template(template_id: int):
+async def get_template(template_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -102,7 +103,7 @@ async def get_template(template_id: int):
  
 @router.post("/{template_id}/use", response_model=MealOut, status_code=201)
 async def use_template(
-    template_id: int,
+    template_id: UUID,
     log_date: DateType = Body(..., embed=True),
 ):
     """Create a new meal from a template on the given date."""
@@ -125,7 +126,7 @@ async def use_template(
  
 
 @router.patch("/{template_id}", response_model=TemplateOut)
-async def update_template(template_id: int, updates: TemplateUpdate):
+async def update_template(template_id: UUID, updates: TemplateUpdate):
     """
     Update a template's metadata (name, meal_type, description)
     and/or replace its items entirely.
@@ -176,7 +177,7 @@ async def update_template(template_id: int, updates: TemplateUpdate):
     return d
  
 @router.delete("/{template_id}", status_code=204)
-async def delete_template(template_id: int):
+async def delete_template(template_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         result = await conn.execute(

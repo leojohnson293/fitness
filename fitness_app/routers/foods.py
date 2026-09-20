@@ -12,6 +12,7 @@ Endpoints:
 """
 
 from typing import List, Optional
+from uuid import UUID
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
@@ -77,7 +78,7 @@ async def search_local(q: str = Query(..., min_length=1), limit: int = 20):
 
 
 @router.get("/{food_id}", response_model=FoodOut)
-async def get_food(food_id: int):
+async def get_food(food_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT * FROM foods WHERE id = $1", food_id)
@@ -87,7 +88,7 @@ async def get_food(food_id: int):
 
 
 @router.delete("/{food_id}", status_code=204)
-async def delete_food(food_id: int):
+async def delete_food(food_id: UUID):
     pool = await get_pool()
     async with pool.acquire() as conn:
         try:

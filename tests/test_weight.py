@@ -14,9 +14,12 @@ from fastapi.testclient import TestClient
 import main
  
 client = TestClient(main.app)
+
+FAKE_ID    = "00000000-0000-0000-0000-000000000001"
+MISSING_ID = "00000000-0000-0000-0000-000000099999"
  
 FAKE_ENTRY = {
-    "id": 1, "log_date": "2026-07-04", "weight_kg": 83.0,
+    "id": FAKE_ID, "log_date": "2026-07-04", "weight_kg": 83.0,
     "waist_cm": None, "notes": None,
     "created_at": "2026-07-04T07:00:00", "rolling_7d_avg": 83.0,
 }
@@ -81,14 +84,14 @@ def test_list_weight_entries_with_date_filter(mock_db_pool):
  
 def test_get_weight_entry_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = FAKE_ENTRY
-    response = client.get("/weight/1")
+    response = client.get(f"/weight/{FAKE_ID}")
     assert response.status_code == 200
-    assert response.json()["id"] == 1
+    assert response.json()["id"] == FAKE_ID
  
  
 def test_get_weight_entry_not_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = None
-    response = client.get("/weight/99999")
+    response = client.get(f"/weight/{MISSING_ID}")
     assert response.status_code == 404
  
  
@@ -96,19 +99,19 @@ def test_get_weight_entry_not_found(mock_db_pool):
  
 def test_update_weight_entry(mock_db_pool):
     mock_db_pool.fetchrow.return_value = {**FAKE_ENTRY, "weight_kg": 82.5}
-    response = client.patch("/weight/1", json={"weight_kg": 82.5})
+    response = client.patch(f"/weight/{FAKE_ID}", json={"weight_kg": 82.5})
     assert response.status_code == 200
     assert response.json()["weight_kg"] == 82.5
  
  
 def test_update_weight_entry_not_found(mock_db_pool):
     mock_db_pool.fetchrow.return_value = None
-    response = client.patch("/weight/99999", json={"weight_kg": 82.5})
+    response = client.patch(f"/weight/{MISSING_ID}", json={"weight_kg": 82.5})
     assert response.status_code == 404
  
  
 def test_update_weight_entry_no_fields():
-    response = client.patch("/weight/1", json={})
+    response = client.patch(f"/weight/{FAKE_ID}", json={})
     assert response.status_code == 400
  
  
@@ -116,11 +119,11 @@ def test_update_weight_entry_no_fields():
  
 def test_delete_weight_entry_success(mock_db_pool):
     mock_db_pool.execute.return_value = "DELETE 1"
-    response = client.delete("/weight/1")
+    response = client.delete(f"/weight/{FAKE_ID}")
     assert response.status_code == 204
  
  
 def test_delete_weight_entry_not_found(mock_db_pool):
     mock_db_pool.execute.return_value = "DELETE 0"
-    response = client.delete("/weight/99999")
+    response = client.delete(f"/weight/{MISSING_ID}")
     assert response.status_code == 404
