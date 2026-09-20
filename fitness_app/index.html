@@ -156,7 +156,7 @@
   <nav>
     <div class="nav-brand">
       <h1>LIFT LOG</h1>
-      <p>80 kg · maintenance</p>
+      <p>78 kg · cut</p>
       <span class="dev-badge" id="dev-badge">⚠ DEV :8001</span>
     </div>
     <div class="nav-links">
@@ -169,7 +169,7 @@
     </div>
     <div class="nav-targets">
       <strong>Maintenance targets</strong>
-      2,720 kcal<br>176g protein<br>280g carbs<br>75g fat
+      <span id="nav-target-list"></span>
     </div>
   </nav>
 
@@ -182,25 +182,25 @@
         <div class="stat">
           <div class="stat-label">Calories today</div>
           <div class="stat-val" id="stat-kcal">—</div>
-          <div class="stat-unit">/ 2,300 kcal</div>
+          <div class="stat-unit" id="unit-kcal"></div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="prog-kcal" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
           <div class="stat-label">Protein today</div>
           <div class="stat-val" id="stat-prot">—</div>
-          <div class="stat-unit">/ 165g target</div>
+          <div class="stat-unit" id="unit-prot"></div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill blue" id="prog-prot" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
           <div class="stat-label">Carbs today</div>
           <div class="stat-val" id="stat-carbs">—</div>
-          <div class="stat-unit">/ 253g target</div>
+          <div class="stat-unit" id="unit-carbs"></div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill orange" id="prog-carbs" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
           <div class="stat-label">Fat today</div>
           <div class="stat-val" id="stat-fat">—</div>
-          <div class="stat-unit">/ 70g target</div>
+          <div class="stat-unit" id="unit-fat"></div>
           <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill purple" id="prog-fat" style="width:0%"></div></div></div>
         </div>
         <div class="stat">
@@ -239,6 +239,7 @@
             <select id="d-type">
               <option>Breakfast</option><option>Mid-morning snack</option><option>Lunch</option>
               <option>Pre-workout</option><option>Dinner</option><option>Other</option>
+              <option>Pre-bed</option><option>Snack</option><option>Drink</option>
             </select>
           </div>
           <div class="form-group full"><label>Description</label><input type="text" id="d-desc" placeholder="e.g. Post-gym lunch"></div>
@@ -385,6 +386,11 @@ if (window.location.port === '8001') {
   document.getElementById('dev-badge').classList.add('visible');
 }
 const today = new Date().toISOString().split('T')[0];
+
+// Daily targets — update these when the diet phase changes.
+// The sidebar, the stat card labels and the progress bars all read from here.
+const TARGETS = { kcal: 2300, protein: 165, carbs: 253, fat: 70 };
+
 let exerciseCount = 0;
 let selectedItems = [];
 let searchTimer = null;
@@ -396,8 +402,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('dash-date').textContent =
     new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  renderTargets();
   loadDashboard();
 });
+
+// Paint the target labels from TARGETS so they always match the progress bars.
+function renderTargets() {
+  document.getElementById('nav-target-list').innerHTML =
+    `${TARGETS.kcal.toLocaleString()} kcal<br>${TARGETS.protein}g protein<br>` +
+    `${TARGETS.carbs}g carbs<br>${TARGETS.fat}g fat`;
+  document.getElementById('unit-kcal').textContent  = `/ ${TARGETS.kcal.toLocaleString()} kcal`;
+  document.getElementById('unit-prot').textContent  = `/ ${TARGETS.protein}g target`;
+  document.getElementById('unit-carbs').textContent = `/ ${TARGETS.carbs}g target`;
+  document.getElementById('unit-fat').textContent   = `/ ${TARGETS.fat}g target`;
+}
 
 function showPage(name, btnEl) {
   ['dashboard','diet','foods','templates','weight','workout'].forEach(p => {
@@ -449,11 +467,13 @@ async function loadDashboard() {
     document.getElementById('stat-carbs').textContent = Math.round(carbs) + 'g';
     document.getElementById('stat-fat').textContent   = Math.round(fat) + 'g';
 
-    document.getElementById('prog-kcal').style.width  = Math.min(100, Math.round(kcal / 27.20)) + '%';
-    document.getElementById('prog-kcal').className    = 'progress-fill' + (kcal > 2720 ? ' over' : '');
-    document.getElementById('prog-prot').style.width  = Math.min(100, Math.round(prot / 1.76)) + '%';
-    document.getElementById('prog-carbs').style.width = Math.min(100, Math.round(carbs / 2.80)) + '%';
-    document.getElementById('prog-fat').style.width   = Math.min(100, Math.round(fat / 0.75)) + '%';
+    const pct = (val, target) => Math.min(100, Math.round((val / target) * 100)) + '%';
+
+    document.getElementById('prog-kcal').style.width  = pct(kcal, TARGETS.kcal);
+    document.getElementById('prog-kcal').className    = 'progress-fill' + (kcal > TARGETS.kcal ? ' over' : '');
+    document.getElementById('prog-prot').style.width  = pct(prot, TARGETS.protein);
+    document.getElementById('prog-carbs').style.width = pct(carbs, TARGETS.carbs);
+    document.getElementById('prog-fat').style.width   = pct(fat, TARGETS.fat);
 
     if (weights.length) {
       const latest = weights[0];
