@@ -90,7 +90,7 @@ def log(msg, colour=RESET):
 
 def post_meal(data: dict):
     payload = {
-        "log_date":    data.get("date", str(date.today())),
+        "log_date":    data.get("log_date", str(date.today())),
         "meal_type":   data.get("meal_type"),
         "description": data.get("description"),
         "calories":    data.get("calories"),
@@ -106,7 +106,7 @@ def post_meal(data: dict):
 
 def post_weight(data: dict):
     payload = {
-        "log_date":  data.get("date", str(date.today())),
+        "log_date":  data.get("log_date", str(date.today())),
         "weight_kg": data["weight_kg"],
         "waist_cm":  data.get("waist_cm"),
         "notes":     data.get("notes"),
@@ -118,7 +118,7 @@ def post_weight(data: dict):
 
 def post_workout(data: dict):
     payload = {
-        "log_date":     data.get("date", str(date.today())),
+        "log_date":     data.get("log_date", str(date.today())),
         "session_type": data.get("session_type"),
         "duration_min": data.get("duration_min"),
         "rpe":          data.get("rpe"),
